@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-cors-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-cors
+  template:
+    metadata:
+      labels:
+        app: nginx-cors
+    spec:
+      containers:
+        - name: nginx-cors
+          image: nginx:latest
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-cors-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-cors-service
+spec:
+  selector:
+    app: nginx-cors
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-cors-config
+data:
+  nginx.conf: |
+    server {
+    listen 80;
+
+    # Catalog Backend
+    location /catalog/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.101.143.246:30300;  # Catalog Backend
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Reviews Backend
+    location /reviews/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.107.29.156:30200;  # Reviews Backend
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Store Backend
+    location /store/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.96.29.221:30400;  # Store Backend
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # MongoDB Reviews
+    location /mongo-reviews/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.100.103.52:32502;  # MongoDB Reviews
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # MySQL Catalog
+    location /mysql-catalog/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.107.109.239:32643;  # MySQL Catalog
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Nginx CORS
+    location /nginx-cors/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        proxy_pass http://10.101.167.107:80;  # Nginx CORS
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
